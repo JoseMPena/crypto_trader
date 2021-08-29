@@ -16,11 +16,11 @@ defmodule Naive.Trader do
   end
 
   def start_link(%{} = args) do
-    GenServer.start_link(self(), args, name: :trader)
+    GenServer.start_link(__MODULE__, args, name: :trader)
   end
 
   def init(%{symbol: symbol, profit_interval: profit_interval}) do
-    sybmol = String.upcase(symbol)
+    symbol = String.upcase(symbol)
     Logger.info("Initializing trader for #{symbol}")
     tick_size = fetch_tick_size(symbol)
     {:ok, %State{symbol: symbol, profit_interval: profit_interval, tick_size: tick_size}}
@@ -48,7 +48,7 @@ defmodule Naive.Trader do
             order_id: order_id,
             orig_qty: quantity
           },
-          profir_interval: profit_interval,
+          profit_interval: profit_interval,
           tick_size: tick_size
         } = state
       ) do
@@ -89,7 +89,7 @@ defmodule Naive.Trader do
     |> elem(1)
     |> Map.get(:symbols)
     |> Enum.find(&(&1["symbol"] == symbol))
-    |> Map.get(:filters)
+    |> Map.get("filters")
     |> Enum.find(&(&1["filterType"] == "PRICE_FILTER"))
     |> Map.get(:tickSize)
   end
