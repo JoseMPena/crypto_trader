@@ -27,6 +27,7 @@ defmodule Streamer.MixProject do
   defp deps do
     [
       {:jason, "~> 1.2"},
+      {:phoenix_pubsub, "~> 2.0"},
       {:websockex, "~> 0.4.3"}
       # {:dep_from_git, git: "https://github.com/elixir-lang/my_dep.git", tag: "0.1.0"},
       # {:sibling_app_in_umbrella, in_umbrella: true}

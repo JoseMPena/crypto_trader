@@ -23,6 +23,12 @@ defmodule Naive.Trader do
     symbol = String.upcase(symbol)
     Logger.info("Initializing trader for #{symbol}")
     tick_size = fetch_tick_size(symbol)
+
+    Phoenix.PubSub.subscribe(
+      Streamer.PubSub,
+      "TRADE_EVENT:#{symbol}"
+    )
+
     {:ok, %State{symbol: symbol, profit_interval: profit_interval, tick_size: tick_size}}
   end
 
@@ -65,17 +71,17 @@ defmodule Naive.Trader do
   end
 
   def handle_cast(
-    %TradeEvent{
-      seller_order_id: order_id,
-      quantity: quantity
-    },
-    %State{
-      sell_order: %Binance.OrderResponse{
-        order_id: order_id,
-        orig_qty: quantity
-      }
-    } = state
-  ) do
+        %TradeEvent{
+          seller_order_id: order_id,
+          quantity: quantity
+        },
+        %State{
+          sell_order: %Binance.OrderResponse{
+            order_id: order_id,
+            orig_qty: quantity
+          }
+        } = state
+      ) do
     Logger.info("Trade finished, trader will now exit")
     {:stop, :normal, state}
   end
@@ -107,6 +113,6 @@ defmodule Naive.Trader do
         tick_size
       ),
       :normal
-      )
+    )
   end
 end

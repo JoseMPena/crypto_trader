@@ -1,5 +1,6 @@
 defmodule Streamer.Binance do
   use WebSockex
+
   require Logger
 
   @stream_endpoint "wss://stream.binance.com:9443/ws/"
@@ -16,11 +17,8 @@ defmodule Streamer.Binance do
 
   def handle_frame({_type, msg}, state) do
     case Jason.decode(msg) do
-      {:ok, event} ->
-        process_event(event)
-
-      {:error, _} ->
-        Logger.error("Unable to parse #{msg}")
+      {:ok, event} -> process_event(event)
+      {:error, _} -> Logger.error("Unable to parse msg: #{msg}")
     end
 
     {:ok, state}
@@ -29,11 +27,11 @@ defmodule Streamer.Binance do
   defp process_event(%{"e" => "trade"} = event) do
     trade_event = %Streamer.Binance.TradeEvent{
       :event_type => event["e"],
+      :event_time => event["E"],
       :symbol => event["s"],
+      :trade_id => event["t"],
       :price => event["p"],
       :quantity => event["q"],
-      :event_time => event["E"],
-      :trade_id => event["t"],
       :buyer_order_id => event["b"],
       :seller_order_id => event["a"],
       :trade_time => event["T"],
@@ -45,6 +43,10 @@ defmodule Streamer.Binance do
         "#{trade_event.symbol}@#{trade_event.price}"
     )
 
-    Naive.send_event(trade_event)
+    Phoenix.PubSub.broadcast(
+      Streamer.PubSub,
+      "TRADE_EVENTS:#{trade_event.symbol}",
+      trade_event
+    )
   end
 end
